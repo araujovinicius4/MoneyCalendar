@@ -9,6 +9,10 @@
   --paper: #fbfbf7;
   --green: #1c6847;
   --lime: #d9ed78;
+  --financial-positive: #236b4a;
+  --financial-negative: #a33f43;
+  --financial-neutral: #6b746e;
+  --financial-informational: #344b40;
 }
 
 * { box-sizing: border-box; }
@@ -67,6 +71,10 @@ h1 span { color: #9ca39c; font-weight: 600; }
 .annual-heading { margin-bottom: clamp(10px, 1.8vh, 20px); }
 .annual-heading h1 { font-size: clamp(32px, 5vh, 52px); }
 .annual-empty-note { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+.annual-profit { margin: 7px 0 0; }
+.annual-profit div { display: flex; align-items: baseline; gap: 7px; }
+.annual-profit dt { color: var(--muted); font-size: 10px; font-weight: 600; }
+.annual-profit dd { margin: 0; font-size: 15px; font-weight: 800; }
 .year-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -97,9 +105,20 @@ h1 span { color: #9ca39c; font-weight: 600; }
 .mini-weekday { color: var(--muted); font-size: clamp(7px, 1vh, 9px) !important; font-weight: 700; }
 .mini-day { width: clamp(14px, 1.9vh, 20px); height: clamp(14px, 1.9vh, 20px); margin: auto; border-radius: 50%; }
 .mini-day--today { color: white; background: var(--green); font-weight: 700; }
-.mini-calendar__finance { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; padding-top: clamp(3px, .45vh, 6px); margin-top: 2px; border-top: 1px solid #e4e6df; color: var(--muted); font-size: clamp(6px, .82vh, 8px); line-height: 1.1; }
+.mini-calendar__finance { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; padding-top: clamp(3px, .45vh, 6px); margin-top: 2px; border-top: 1px solid #e4e6df; color: var(--muted); font-size: clamp(6px, .82vh, 8px); line-height: 1.1; }
 .mini-calendar__finance span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
 .mini-calendar__finance b { color: var(--green); font-weight: 800; }
+.mini-calendar__finance .financial-value--positive,
+.mini-calendar__finance .financial-value--negative { font-weight: 700; }
+.mini-calendar__finance > span:not([aria-label^="Lucro do mês"]) { opacity: .78; }
+.mini-calendar__finance [aria-label^="Lucro do mês"] { font-size: 1.28em; font-weight: 900; letter-spacing: -.02em; }
+.mini-calendar__finance .financial-value--positive b,
+.mini-calendar__finance .financial-value--negative b { color: inherit; }
+
+.financial-value--positive { color: var(--financial-positive); }
+.financial-value--negative { color: var(--financial-negative); }
+.financial-value--neutral { color: var(--financial-neutral); }
+.financial-value--informational { color: var(--financial-informational); }
 
 .month-page { max-width: 1280px; }
 .month-heading { align-items: flex-end; }
@@ -124,10 +143,21 @@ h1 span { color: #9ca39c; font-weight: 600; }
 .month-summary__section { min-width: 0; padding: 17px; border: 1px solid var(--line); border-radius: 11px; }
 .month-summary__section > h3 { margin: 0 0 13px; font-size: 15px; }
 .month-summary__metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.month-summary__metrics--financial { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .month-summary__metrics > .month-metric { position: relative; min-width: 0; padding: 12px 34px 12px 12px; border-radius: 8px; background: #f0f1eb; }
 .month-summary__metrics .accumulation-metric { grid-column: span 2; background: #e8efda; }
 .month-summary__metrics dt { min-height: 28px; color: var(--muted); font-size: 10px; line-height: 1.35; }
 .month-summary__metrics dd { margin: 7px 0 0; font-size: clamp(14px, 1.35vw, 18px); font-weight: 700; white-space: nowrap; }
+.month-summary__metrics > .metric-item--primary { border: 1px solid #cbd4c5; background: #f5f7ef; }
+.month-summary__metrics > .metric-item--profit { grid-column: 1 / -1; padding: 19px 42px 19px 18px; box-shadow: inset 4px 0 0 #aebd91; }
+.month-summary__metrics > .metric-item--profit dt { min-height: 0; font-size: 11px; font-weight: 700; letter-spacing: .025em; }
+.month-summary__metrics > .metric-item--profit dd { margin-top: 10px; font-size: clamp(26px, 2.5vw, 32px); font-weight: 850; line-height: 1; letter-spacing: -.035em; }
+.month-summary__metrics > .metric-item--core { background: transparent; }
+.month-summary__metrics > .metric-item--core dd { font-size: clamp(17px, 1.6vw, 21px); font-weight: 750; }
+.month-summary__metrics > .metric-item--supporting dd { font-size: clamp(14px, 1.25vw, 16px); font-weight: 650; }
+.month-summary__metrics > .metric-item--secondary { background: #f4f4ef; }
+.month-summary__metrics > .metric-item--secondary dd { font-size: clamp(12px, 1.05vw, 14px); font-weight: 550; }
+.metric-item--secondary dd.financial-value--informational { color: var(--muted); }
 .metric-value-button { margin: -4px; padding: 4px; color: inherit; border: 0; border-radius: 5px; background: transparent; font: inherit; font-weight: inherit; text-align: left; text-decoration: underline; text-decoration-color: #9ab0a1; text-underline-offset: 3px; cursor: pointer; }
 .metric-value-button:hover { color: var(--green); text-decoration-color: currentColor; }
 .accumulation-interpretation { margin-top: 10px; color: var(--muted); font-size: 10px; line-height: 1.45; }
@@ -147,6 +177,11 @@ h1 span { color: #9ca39c; font-weight: 600; }
 .operational-summary__metrics > .month-metric { position: relative; min-width: 0; padding: 13px 34px 13px 13px; border: 1px solid var(--line); border-radius: 8px; }
 .operational-summary__metrics dt { min-height: 30px; color: var(--muted); font-size: 10px; line-height: 1.35; }
 .operational-summary__metrics dd { margin: 7px 0 0; font-size: clamp(13px, 1.2vw, 17px); font-weight: 700; white-space: nowrap; }
+.operational-summary__metrics > .metric-item--primary { grid-column: span 2; padding: 17px 38px 17px 16px; border-color: #c4cec0; background: #f7f8f2; box-shadow: inset 3px 0 0 #b5c19e; }
+.operational-summary__metrics > .metric-item--primary dt { min-height: 0; font-size: 11px; font-weight: 700; }
+.operational-summary__metrics > .metric-item--primary dd { margin-top: 9px; font-size: clamp(21px, 2vw, 26px); font-weight: 820; line-height: 1; letter-spacing: -.025em; }
+.operational-summary__metrics > .metric-item--supporting dd { font-weight: 700; }
+.operational-summary__metrics > .metric-item--secondary dd { font-size: clamp(11px, 1vw, 14px); font-weight: 550; }
 .operational-summary__metrics .daily-target { background: #e8efda; border-color: #cad8b3; }
 .remaining-days dd { color: var(--green); }
 
@@ -162,9 +197,17 @@ h1 span { color: #9ca39c; font-weight: 600; }
 .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin: 24px 0 0; }
 .metric-grid--financial { grid-template-columns: repeat(3, 1fr); }
 .metric-grid > .metric-item { position: relative; min-width: 0; padding: 12px 34px 12px 12px; border-radius: 8px; background: #f0f1eb; }
-.metric-grid > .metric-item--emphasis { background: #e8efda; box-shadow: inset 0 0 0 1px #d2ddc0; }
 .metric-grid dt { min-height: 30px; color: var(--muted); font-size: 10px; line-height: 1.35; }
 .metric-grid dd { margin: 7px 0 0; font-size: clamp(13px, 1.3vw, 17px); font-weight: 700; white-space: nowrap; }
+.metric-grid > .metric-item--primary { border: 1px solid #cbd4c5; background: #f5f7ef; }
+.metric-grid--financial > .metric-item--profit { grid-column: 1 / -1; padding: 17px 42px 17px 17px; box-shadow: inset 4px 0 0 #aebd91; }
+.metric-grid--financial > .metric-item--profit dt { min-height: 0; font-size: 11px; font-weight: 700; }
+.metric-grid--financial > .metric-item--profit dd { margin-top: 9px; font-size: clamp(24px, 2.4vw, 30px); font-weight: 850; line-height: 1; letter-spacing: -.03em; }
+.metric-grid > .metric-item--core { background: transparent; }
+.metric-grid > .metric-item--core dd { font-size: clamp(16px, 1.55vw, 20px); font-weight: 750; }
+.metric-grid > .metric-item--supporting dd { font-size: clamp(13px, 1.2vw, 15px); font-weight: 650; }
+.metric-grid > .metric-item--secondary { background: #f4f4ef; }
+.metric-grid > .metric-item--secondary dd { font-size: clamp(11px, 1.05vw, 13px); font-weight: 550; }
 .indicator-help { position: absolute; top: 8px; right: 8px; }
 .indicator-help__button { display: grid; place-items: center; width: 20px; height: 20px; padding: 0; color: var(--green); border: 1px solid #b9c5b8; border-radius: 50%; background: #fff; font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
 .indicator-help__button[aria-expanded="true"] { color: #fff; border-color: var(--green); background: var(--green); }

@@ -6,6 +6,7 @@ import {
   calcularGastos,
   calcularIndiceAcumulacao,
   calcularInvestimentos,
+  calcularLucro,
   calcularResgatesInvestimento,
   calcularMetaDiariaAtualDeGasto,
   calcularOrcamentoOperacional,
@@ -31,6 +32,8 @@ export interface MonthSummary {
   readonly faturamento: number
   readonly receita: number
   readonly expenses: number
+  /** Faturamento menos gastos no período. */
+  readonly profit: number
   /** Aplicações brutas no período. */
   readonly applications: number
   /** Resgates brutos no período. */
@@ -95,6 +98,7 @@ export function createMonthSummary(
     faturamento: calcularFaturamento(selected.movements),
     receita: calcularReceitas(selected.movements),
     expenses: calcularGastos(selected.movements),
+    profit: calcularLucro(selected.movements),
     applications: calcularAplicacoes(selected.movements),
     investmentRedemptions: calcularResgatesInvestimento(selected.movements),
     investments: calcularInvestimentos(selected.movements),
@@ -102,6 +106,22 @@ export function createMonthSummary(
     percentualEfetivamenteInvestido: calcularPercentualEfetivamenteInvestido(selected.movements),
     accumulationIndex: calcularIndiceAcumulacao(selected.movements),
   }
+}
+
+/** Lucro realizado no ano, limitado até hoje quando o ano é o atual. */
+export function createYearProfit(
+  movements: readonly MovimentacaoFinanceira[],
+  year: number,
+  today = new Date(),
+): number | null {
+  if (year > today.getFullYear()) return null
+
+  const prefix = `${year}-`
+  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const selected = movements.filter((movement) =>
+    movement.data.startsWith(prefix) && (year < today.getFullYear() || movement.data <= todayIso)
+  )
+  return calcularLucro(selected)
 }
 
 export function createOperationalMonthSummary(

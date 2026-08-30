@@ -79,10 +79,10 @@ describe('indicadores operacionais mensais integrados', () => {
     const html70 = renderToStaticMarkup(<MonthScreen year={2026} month={8} movements={movements} today={today} investmentPercentage={0.7} />)
     const html35 = renderToStaticMarkup(<MonthScreen year={2026} month={8} movements={movements} today={today} investmentPercentage={0.35} />)
     expect(html70).toContain('value="70"')
-    expect(html70).toContain('Percentual operacional</dt><dd>30,00%')
+    expect(html70).toContain('Percentual operacional</dt><dd class="financial-value--informational">30,00%')
     expect(html70).toContain('aria-label="Ver memória de cálculo do orçamento operacional">R$ 300,00')
     expect(html35).toContain('value="35"')
-    expect(html35).toContain('Percentual operacional</dt><dd>65,00%')
+    expect(html35).toContain('Percentual operacional</dt><dd class="financial-value--informational">65,00%')
     expect(html35).toContain('aria-label="Ver memória de cálculo do orçamento operacional">R$ 650,00')
   })
 

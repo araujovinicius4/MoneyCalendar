@@ -5,10 +5,11 @@ import {
   calcularGastos,
   calcularIndiceAcumulacao,
   calcularInvestimentos,
+  calcularLucro,
 } from '../../domain/finance'
 import type { MovimentacaoFinanceira } from '../../domain/transactions'
 import { YearScreen } from '../App'
-import { createMonthSummary } from '../month-summary'
+import { createMonthSummary, createYearProfit } from '../month-summary'
 
 const today = new Date(2026, 7, 15, 12)
 const movements: readonly MovimentacaoFinanceira[] = [
@@ -42,10 +43,12 @@ describe('resumo financeiro compacto no calendário anual', () => {
     if (!summary) return
     expect(summary.faturamento).toBe(calcularFaturamento(summary.movements))
     expect(summary.expenses).toBe(calcularGastos(summary.movements))
+    expect(summary.profit).toBe(calcularLucro(summary.movements))
     expect(summary.investments).toBe(calcularInvestimentos(summary.movements))
     expect(summary.accumulationIndex).toBe(calcularIndiceAcumulacao(summary.movements))
     expect(monthCard('Julho')).toContain('aria-label="Faturamento do mês: R$ 1.000,00"')
     expect(monthCard('Julho')).toContain('aria-label="Gastos do mês: R$ 200,00"')
+    expect(monthCard('Julho')).toContain('aria-label="Lucro do mês: R$ 800,00"')
     expect(monthCard('Julho')).toContain('aria-label="Investimentos do mês: R$ 300,00"')
     expect(monthCard('Julho')).toContain('aria-label="Índice de acumulação do mês: 1,50"')
   })
@@ -61,8 +64,20 @@ describe('resumo financeiro compacto no calendário anual', () => {
     expect(august?.movements.map(({ id }) => id)).toEqual(['aug-billing', 'aug-transfer'])
     expect(monthCard('Agosto')).toContain('3 mov.')
     expect(monthCard('Agosto')).toContain('aria-label="Gastos do mês: R$ 0,00"')
+    expect(monthCard('Agosto')).toContain('aria-label="Lucro do mês: R$ 500,00"')
     expect(monthCard('Agosto')).toContain('aria-label="Índice de acumulação do mês: —"')
     expect(monthCard('Agosto')).not.toContain('R$ 999,00')
+  })
+
+  it('exibe o lucro anual realizado e ignora movimentações futuras', () => {
+    expect(createYearProfit(movements, 2026, today)).toBe(130_000)
+    expect(html).toContain('Lucro acumulado no ano</dt><dd class="financial-value--positive">R$ 1.300,00')
+  })
+
+  it('não apresenta lucro realizado em anos futuros', () => {
+    const futureHtml = renderToStaticMarkup(<YearScreen year={2027} movements={movements} today={today} />)
+    expect(createYearProfit(movements, 2027, today)).toBeNull()
+    expect(futureHtml).not.toContain('Lucro acumulado no ano')
   })
 
   it('não exibe totais financeiros nos meses futuros', () => {

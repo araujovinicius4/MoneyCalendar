@@ -35,6 +35,12 @@ export const DAY_INDICATOR_HELP = {
     includes: 'Inclui somente a classificação gasto.',
     excludes: 'Não inclui investimentos, transferências, estornos ou itens não classificados.',
   },
+  profit: {
+    meaning: 'Resultado da atividade depois dos gastos.',
+    calculation: 'Faturamento menos gastos.',
+    includes: 'Inclui somente movimentações classificadas como faturamento e gasto.',
+    excludes: 'Não inclui receitas, investimentos, transferências, estornos ou movimentações não classificadas.',
+  },
   investimentos: {
     meaning: 'Investimentos líquidos realizados no dia.',
     calculation: 'Aplicações menos resgates de investimento.',

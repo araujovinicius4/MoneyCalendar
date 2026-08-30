@@ -46,6 +46,10 @@ export const calcularReceitas = (movimentacoes: Movimentacoes) =>
 export const calcularGastos = (movimentacoes: Movimentacoes) =>
   somarPorClassificacao(movimentacoes, 'gasto')
 
+/** Resultado da atividade: faturamento menos gastos; pode ser negativo. */
+export const calcularLucro = (movimentacoes: Movimentacoes) =>
+  calcularFaturamento(movimentacoes) - calcularGastos(movimentacoes)
+
 /** Soma bruta das aplicações, sem descontar resgates. */
 export const calcularAplicacoes = (movimentacoes: Movimentacoes) =>
   somarPorClassificacao(movimentacoes, 'investimento')

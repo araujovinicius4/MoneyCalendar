@@ -24,7 +24,7 @@ describe('ajuda contextual dos indicadores diários', () => {
   afterEach(() => container.remove())
 
   it('mantém uma configuração central completa para todos os indicadores', () => {
-    expect(Object.keys(DAY_INDICATOR_HELP)).toHaveLength(8)
+    expect(Object.keys(DAY_INDICATOR_HELP)).toHaveLength(9)
     for (const help of Object.values(DAY_INDICATOR_HELP)) {
       expect(help.meaning).not.toBe('')
       expect(help.calculation).not.toBe('')
@@ -38,7 +38,7 @@ describe('ajuda contextual dos indicadores diários', () => {
     await act(async () => root.render(<DayScreen year={2026} month={8} day={15} movements={movements} />))
 
     const buttons = container.querySelectorAll<HTMLButtonElement>('.indicator-help__button')
-    expect(buttons).toHaveLength(8)
+    expect(buttons).toHaveLength(9)
     const entryHelp = buttons[0]
     expect(entryHelp.getAttribute('aria-expanded')).toBe('false')
     expect(container.textContent).not.toContain(DAY_INDICATOR_HELP.bankingEntries.meaning)

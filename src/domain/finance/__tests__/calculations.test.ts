@@ -9,6 +9,7 @@ import {
   calcularIndiceAcumulacao,
   calcularInvestimentos,
   calcularInvestimentosLiquidos,
+  calcularLucro,
   calcularMetaDiariaAtualDeGasto,
   calcularOrcamentoOperacional,
   calcularPercentualOperacional,
@@ -59,6 +60,33 @@ describe('cálculos por classificação financeira', () => {
   })
   it('não inclui transferência nem estorno de entrada no faturamento', () => {
     expect(calcularFaturamento(movimentacoes)).toBe(100_000)
+  })
+})
+
+describe('lucro', () => {
+  const movement = (id: string, value: number, classification: MovimentacaoFinanceira['classificacaoFinanceira']): MovimentacaoFinanceira => ({
+    id, data: '2026-08-10', valorEmCentavos: value,
+    tipoBancario: classification === 'faturamento' || classification === 'receita' || classification === 'estorno' ? 'entrada' : 'saida',
+    classificacaoFinanceira: classification, dadosOriginais: {},
+  })
+  const billing = movement('fat', 10_000, 'faturamento')
+
+  it('é positivo quando o faturamento supera os gastos', () => {
+    expect(calcularLucro([billing, movement('gasto', 4_000, 'gasto')])).toBe(6_000)
+  })
+  it('é zero quando faturamento e gastos são iguais', () => {
+    expect(calcularLucro([billing, movement('gasto', 10_000, 'gasto')])).toBe(0)
+  })
+  it('é negativo quando os gastos superam o faturamento', () => {
+    expect(calcularLucro([billing, movement('gasto', 15_000, 'gasto')])).toBe(-5_000)
+  })
+  it.each([
+    ['investimentos', 'investimento'],
+    ['transferências', 'transferencia'],
+    ['receitas', 'receita'],
+    ['estornos', 'estorno'],
+  ] as const)('%s não alteram o lucro', (_label, classification) => {
+    expect(calcularLucro([billing, movement(classification, 99_000, classification)])).toBe(10_000)
   })
 })
 

@@ -99,8 +99,8 @@ describe('reclassificação manual em memória', () => {
 
     const dayHtml = renderToStaticMarkup(<DayScreen year={2026} month={8} day={14} movements={reclassified} />)
     const monthHtml = renderToStaticMarkup(<MonthScreen year={2026} month={8} movements={reclassified} today={today} investmentPercentage={0.8} />)
-    expect(dayHtml).toContain('Faturamento do dia</dt><dd>R$ 100,00')
-    expect(dayHtml).toContain('Gastos do dia</dt><dd>R$ 40,00')
+    expect(dayHtml).toContain('Faturamento do dia</dt><dd class="financial-value--informational">R$ 100,00')
+    expect(dayHtml).toContain('Gastos do dia</dt><dd class="financial-value--informational">R$ 40,00')
     expect(monthHtml).toContain('aria-label="Ver movimentações que compõem o faturamento acumulado">R$ 100,00')
     expect(monthHtml).toContain('aria-label="Ver movimentações que compõem os gastos acumulados">R$ 40,00')
   })

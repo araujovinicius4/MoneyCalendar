@@ -10,12 +10,13 @@ import {
   calcularGastos,
   calcularIndiceAcumulacao,
   calcularInvestimentos,
+  calcularLucro,
   calcularResultadoBancario,
   calcularReceitas,
   calcularSaidasBancarias,
 } from '../domain/finance'
 import { ImportCsvModal } from './ImportCsvModal'
-import { createMonthSummary, createOperationalMonthSummary } from './month-summary'
+import { createMonthSummary, createOperationalMonthSummary, createYearProfit } from './month-summary'
 import { reclassifyMovementInMemory } from './reclassify-movement'
 import {
   loadInvestmentPercentage,
@@ -50,6 +51,7 @@ import { CalculationDetailModal } from './CalculationDetailModal'
 import { createOperationalCalculationDetail, OPERATIONAL_CALCULATION_ACTION_LABELS, type OperationalCalculationId } from './operational-calculation-detail'
 import { ACCUMULATION_INDEX_ACTION_LABEL, createAccumulationIndexCalculationDetail } from './accumulation-index-calculation-detail'
 import { LandingPage, LoginScreen } from './PublicPages'
+import { getFinancialValueClassName, type FinancialSemanticType } from './financial-value-state'
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as const
 
@@ -106,12 +108,13 @@ function Breadcrumbs({ year, month, day, today = new Date() }: { year: number; m
 
 export function YearScreen({ year, movements, today = new Date() }: { year: number; movements: readonly MovimentacaoFinanceira[]; today?: Date }) {
   const months = createYearCalendar(year, today)
+  const annualProfit = createYearProfit(movements, year, today)
 
   return (
     <section className="page annual-page">
       <Breadcrumbs year={year} today={today} />
       <div className="page-heading annual-heading">
-        <div><p className="eyebrow">Calendário anual</p><h1 className={year === today.getFullYear() ? 'annual-year--current' : undefined}>{year}</h1>{movements.length === 0 && <span className="annual-empty-note">Ainda não existem movimentações.</span>}</div>
+        <div><p className="eyebrow">Calendário anual</p><h1 className={year === today.getFullYear() ? 'annual-year--current' : undefined}>{year}</h1>{movements.length === 0 && <span className="annual-empty-note">Ainda não existem movimentações.</span>}{annualProfit !== null && <dl className="annual-profit"><div><dt>Lucro acumulado no ano</dt><dd className={getFinancialValueClassName(annualProfit, 'profit')}>{formatMoney(annualProfit)}</dd></div></dl>}</div>
         <nav className="period-navigation" aria-label="Navegar entre anos">
           {year > 1 && <Link href={yearPath(year - 1)} aria-label={`Ano anterior, ${year - 1}`}>← <span>{year - 1}</span></Link>}
           <Link href={todayYearPath(today)} aria-label={`Hoje, abrir ano ${today.getFullYear()}`}>Hoje</Link>
@@ -144,6 +147,7 @@ export function YearScreen({ year, movements, today = new Date() }: { year: numb
               <div className="mini-calendar__finance" aria-label={`Resumo financeiro de ${month.name}`}>
                 <span aria-label={`Faturamento do mês: ${formatMoney(financialSummary.faturamento)}`}><b>Fat.</b> {formatCompactMoney(financialSummary.faturamento)}</span>
                 <span aria-label={`Gastos do mês: ${formatMoney(financialSummary.expenses)}`}><b>Gas.</b> {formatCompactMoney(financialSummary.expenses)}</span>
+                <span className={getFinancialValueClassName(financialSummary.profit, 'profit')} aria-label={`Lucro do mês: ${formatMoney(financialSummary.profit)}`}><b>Luc.</b> {formatCompactMoney(financialSummary.profit)}</span>
                 <span aria-label={`Investimentos do mês: ${formatMoney(financialSummary.investments)}`}><b>Inv.</b> {formatCompactMoney(financialSummary.investments)}</span>
                 <span aria-label={`Índice de acumulação do mês: ${financialSummary.accumulationIndex === null ? '—' : decimalFormatter.format(financialSummary.accumulationIndex)}`}><b>IA</b> {financialSummary.accumulationIndex === null ? '—' : decimalFormatter.format(financialSummary.accumulationIndex)}</span>
               </div>
@@ -173,15 +177,16 @@ export function MonthScreen({ year, month, movements, today = new Date(), invest
   const summary = createMonthSummary(movements, year, month, today)
   const operationalSummary = createOperationalMonthSummary(summary, investmentPercentage, today)
   const bankingMetrics = summary ? [
-    { indicator: 'bankingEntries', label: 'Entradas bancárias acumuladas', value: formatMoney(summary.bankingEntries), detail: 'bankingEntries' },
-    { indicator: 'bankingExits', label: 'Saídas bancárias acumuladas', value: formatMoney(summary.bankingExits), detail: 'bankingExits' },
-    { indicator: 'bankingResult', label: 'Resultado bancário acumulado', value: formatMoney(summary.bankingResult), detail: 'bankingResult' },
+    { indicator: 'bankingEntries', label: 'Entradas bancárias acumuladas', value: formatMoney(summary.bankingEntries), rawValue: summary.bankingEntries, detail: 'bankingEntries' },
+    { indicator: 'bankingExits', label: 'Saídas bancárias acumuladas', value: formatMoney(summary.bankingExits), rawValue: summary.bankingExits, detail: 'bankingExits' },
+    { indicator: 'bankingResult', label: 'Resultado bancário acumulado', value: formatMoney(summary.bankingResult), rawValue: summary.bankingResult, detail: 'bankingResult' },
   ] as const : []
   const financialMetrics = summary ? [
-    { indicator: 'faturamento', label: 'Faturamento acumulado', value: formatMoney(summary.faturamento), detail: 'faturamento' },
-    { indicator: 'receita', label: 'Receita acumulada', value: formatMoney(summary.receita), detail: 'receita' },
-    { indicator: 'gastos', label: 'Gastos acumulados', value: formatMoney(summary.expenses), supplementalValue: `${summary.percentualEfetivamenteGasto === null ? '—' : percentFormatter.format(summary.percentualEfetivamenteGasto)} do faturamento`, detail: 'gastos' },
-    { indicator: 'investimentos', label: 'Investimentos líquidos acumulados', value: formatMoney(summary.investments), supplementalValue: `${summary.percentualEfetivamenteInvestido === null ? '—' : percentFormatter.format(summary.percentualEfetivamenteInvestido)} do faturamento`, detail: 'investimentos' },
+    { indicator: 'profit', label: 'Lucro acumulado', value: formatMoney(summary.profit), rawValue: summary.profit },
+    { indicator: 'faturamento', label: 'Faturamento acumulado', value: formatMoney(summary.faturamento), rawValue: summary.faturamento, detail: 'faturamento' },
+    { indicator: 'gastos', label: 'Gastos acumulados', value: formatMoney(summary.expenses), rawValue: summary.expenses, supplementalValue: `${summary.percentualEfetivamenteGasto === null ? '—' : percentFormatter.format(summary.percentualEfetivamenteGasto)} do faturamento`, detail: 'gastos' },
+    { indicator: 'investimentos', label: 'Investimentos líquidos acumulados', value: formatMoney(summary.investments), rawValue: summary.investments, supplementalValue: `${summary.percentualEfetivamenteInvestido === null ? '—' : percentFormatter.format(summary.percentualEfetivamenteInvestido)} do faturamento`, detail: 'investimentos' },
+    { indicator: 'receita', label: 'Receita acumulada', value: formatMoney(summary.receita), rawValue: summary.receita, detail: 'receita' },
   ] as const : []
   const indicatorDetail = openDetail
     ? createAccumulatedIndicatorDetail(movements, year, month, openDetail, today)
@@ -264,6 +269,7 @@ export function MonthScreen({ year, month, movements, today = new Date(), invest
                     indicator="accumulationIndex"
                     label="Índice de acumulação do mês"
                     value={summary.accumulationIndex === null ? '—' : `${decimalFormatter.format(summary.accumulationIndex)} (${percentFormatter.format(summary.accumulationIndex)})`}
+                    rawValue={summary.accumulationIndex}
                     className="accumulation-metric"
                     onValueClick={() => setOpenCalculation('accumulationIndex')}
                     valueActionLabel={ACCUMULATION_INDEX_ACTION_LABEL}
@@ -283,6 +289,7 @@ export function MonthScreen({ year, month, movements, today = new Date(), invest
                   <div><p className="eyebrow">Planejamento</p><h3>Planejamento operacional</h3></div>
                 </header>
                 <dl className="operational-summary__metrics">
+                  <MonthlyMetric indicator="operationalBalance" label="Saldo operacional" value={formatMoney(operationalSummary.operationalBalance)} rawValue={operationalSummary.operationalBalance} onValueClick={() => setOpenCalculation('operationalBalance')} valueActionLabel={OPERATIONAL_CALCULATION_ACTION_LABELS.operationalBalance} />
                   <div className="month-metric metric-item investment-percentage">
                     <label><span>Percentual destinado a investimentos</span><span><input
                         type="number"
@@ -299,12 +306,11 @@ export function MonthScreen({ year, month, movements, today = new Date(), invest
                     <IndicatorHelp help={MONTH_INDICATOR_HELP.investmentPercentage} label="Percentual destinado a investimentos" />
                   </div>
                   <MonthlyMetric indicator="operationalPercentage" label="Percentual operacional" value={percentFormatter.format(operationalSummary.operationalPercentage)} />
-                  <MonthlyMetric indicator="investmentAllocation" label="Valor destinado a investimentos" value={formatMoney(operationalSummary.investmentAllocation)} onValueClick={() => setOpenCalculation('investmentAllocation')} valueActionLabel={OPERATIONAL_CALCULATION_ACTION_LABELS.investmentAllocation} />
-                  <MonthlyMetric indicator="operationalBudget" label="Orçamento operacional" value={formatMoney(operationalSummary.operationalBudget)} onValueClick={() => setOpenCalculation('operationalBudget')} valueActionLabel={OPERATIONAL_CALCULATION_ACTION_LABELS.operationalBudget} />
-                  <MonthlyMetric indicator="realizedExpenses" label="Gastos realizados" value={formatMoney(operationalSummary.realizedExpenses)} />
-                  <MonthlyMetric indicator="operationalBalance" label="Saldo operacional" value={formatMoney(operationalSummary.operationalBalance)} onValueClick={() => setOpenCalculation('operationalBalance')} valueActionLabel={OPERATIONAL_CALCULATION_ACTION_LABELS.operationalBalance} />
+                  <MonthlyMetric indicator="investmentAllocation" label="Valor destinado a investimentos" value={formatMoney(operationalSummary.investmentAllocation)} rawValue={operationalSummary.investmentAllocation} onValueClick={() => setOpenCalculation('investmentAllocation')} valueActionLabel={OPERATIONAL_CALCULATION_ACTION_LABELS.investmentAllocation} />
+                  <MonthlyMetric indicator="operationalBudget" label="Orçamento operacional" value={formatMoney(operationalSummary.operationalBudget)} rawValue={operationalSummary.operationalBudget} onValueClick={() => setOpenCalculation('operationalBudget')} valueActionLabel={OPERATIONAL_CALCULATION_ACTION_LABELS.operationalBudget} />
+                  <MonthlyMetric indicator="realizedExpenses" label="Gastos realizados" value={formatMoney(operationalSummary.realizedExpenses)} rawValue={operationalSummary.realizedExpenses} />
                   {summary.period === 'current' && <>
-                    <MonthlyMetric indicator="dailyTarget" label="Meta diária atual de gasto" value={operationalSummary.currentDailySpendingTarget === null ? '—' : formatMoney(operationalSummary.currentDailySpendingTarget)} className="daily-target" onValueClick={() => setOpenCalculation('dailyTarget')} valueActionLabel={OPERATIONAL_CALCULATION_ACTION_LABELS.dailyTarget} />
+                    <MonthlyMetric indicator="dailyTarget" label="Meta diária atual de gasto" value={operationalSummary.currentDailySpendingTarget === null ? '—' : formatMoney(operationalSummary.currentDailySpendingTarget)} rawValue={operationalSummary.currentDailySpendingTarget} className="daily-target" onValueClick={() => setOpenCalculation('dailyTarget')} valueActionLabel={OPERATIONAL_CALCULATION_ACTION_LABELS.dailyTarget} />
                     <MonthlyMetric indicator="remainingDays" label="Quantidade de dias restantes" value={`${operationalSummary.remainingDays} dias restantes`} className="daily-target remaining-days" />
                   </>}
                 </dl>
@@ -337,20 +343,30 @@ const classificationLabels: Record<MovimentacaoFinanceira['classificacaoFinancei
   transferencia: 'Transferência', estorno: 'Estorno', nao_classificado: 'Não classificado',
 }
 
-function DailyMetric({ indicator, label, value }: { readonly indicator: DayIndicatorId; readonly label: string; readonly value: string }) {
-  const isEmphasis = indicator === 'bankingResult' || indicator === 'accumulationIndex'
+const primaryIndicators = new Set<FinancialSemanticType>(['profit', 'operationalBalance'])
+const coreIndicators = new Set<FinancialSemanticType>(['faturamento', 'gastos'])
+const supportingIndicators = new Set<FinancialSemanticType>(['investimentos', 'bankingResult'])
+
+function getIndicatorHierarchyClassName(indicator: FinancialSemanticType): string {
+  if (primaryIndicators.has(indicator)) return 'metric-item--primary'
+  if (coreIndicators.has(indicator)) return 'metric-item--core'
+  if (supportingIndicators.has(indicator)) return 'metric-item--supporting'
+  return 'metric-item--secondary'
+}
+
+function DailyMetric({ indicator, label, value, rawValue }: { readonly indicator: DayIndicatorId; readonly label: string; readonly value: string; readonly rawValue: number | null }) {
   return (
-    <div className={`metric-item${isEmphasis ? ' metric-item--emphasis' : ''}`}>
-      <dt>{label}</dt><dd>{value}</dd>
+    <div className={`metric-item metric-item--${indicator} ${getIndicatorHierarchyClassName(indicator)}`}>
+      <dt>{label}</dt><dd className={getFinancialValueClassName(rawValue, indicator)}>{value}</dd>
       <IndicatorHelp help={DAY_INDICATOR_HELP[indicator]} label={label} />
     </div>
   )
 }
 
-function MonthlyMetric({ indicator, label, value, supplementalValue, className = '', onValueClick, valueActionLabel }: { readonly indicator: MonthIndicatorId; readonly label: string; readonly value: string; readonly supplementalValue?: string; readonly className?: string; readonly onValueClick?: () => void; readonly valueActionLabel?: string }) {
+function MonthlyMetric({ indicator, label, value, rawValue = null, supplementalValue, className = '', onValueClick, valueActionLabel }: { readonly indicator: MonthIndicatorId; readonly label: string; readonly value: string; readonly rawValue?: number | null; readonly supplementalValue?: string; readonly className?: string; readonly onValueClick?: () => void; readonly valueActionLabel?: string }) {
   return (
-    <div className={`month-metric metric-item ${className}`.trim()}>
-      <dt>{label}</dt><dd>{onValueClick
+    <div className={`month-metric metric-item metric-item--${indicator} ${getIndicatorHierarchyClassName(indicator)} ${className}`.trim()}>
+      <dt>{label}</dt><dd className={getFinancialValueClassName(rawValue, indicator as FinancialSemanticType)}>{onValueClick
         ? <button className="metric-value-button" type="button" onClick={onValueClick} aria-label={valueActionLabel}>{value}</button>
         : value}{supplementalValue && <span className="metric-supplemental">{supplementalValue}</span>}</dd>
       <IndicatorHelp help={MONTH_INDICATOR_HELP[indicator]} label={label} />
@@ -384,16 +400,17 @@ export function DayScreen({ year, month, day, movements, today = new Date(), onR
   const previousDay = getAdjacentDay(year, month, day, -1)
   const nextDay = getAdjacentDay(year, month, day, 1)
   const bankingMetrics = [
-    { indicator: 'bankingEntries', label: 'Entradas bancárias do dia', value: formatMoney(calcularEntradasBancarias(dailyMovements)) },
-    { indicator: 'bankingExits', label: 'Saídas bancárias do dia', value: formatMoney(calcularSaidasBancarias(dailyMovements)) },
-    { indicator: 'bankingResult', label: 'Resultado bancário do dia', value: formatMoney(calcularResultadoBancario(dailyMovements)) },
+    { indicator: 'bankingEntries', label: 'Entradas bancárias do dia', value: formatMoney(calcularEntradasBancarias(dailyMovements)), rawValue: calcularEntradasBancarias(dailyMovements) },
+    { indicator: 'bankingExits', label: 'Saídas bancárias do dia', value: formatMoney(calcularSaidasBancarias(dailyMovements)), rawValue: calcularSaidasBancarias(dailyMovements) },
+    { indicator: 'bankingResult', label: 'Resultado bancário do dia', value: formatMoney(calcularResultadoBancario(dailyMovements)), rawValue: calcularResultadoBancario(dailyMovements) },
   ] as const
   const financialMetrics = [
-    { indicator: 'faturamento', label: 'Faturamento do dia', value: formatMoney(calcularFaturamento(dailyMovements)) },
-    { indicator: 'receita', label: 'Receita do dia', value: formatMoney(calcularReceitas(dailyMovements)) },
-    { indicator: 'gastos', label: 'Gastos do dia', value: formatMoney(calcularGastos(dailyMovements)) },
-    { indicator: 'investimentos', label: 'Investimentos do dia', value: formatMoney(calcularInvestimentos(dailyMovements)) },
-    { indicator: 'accumulationIndex', label: 'Índice de acumulação do dia', value: accumulationIndex === null ? '—' : percentFormatter.format(accumulationIndex) },
+    { indicator: 'profit', label: 'Lucro do dia', value: formatMoney(calcularLucro(dailyMovements)), rawValue: calcularLucro(dailyMovements) },
+    { indicator: 'faturamento', label: 'Faturamento do dia', value: formatMoney(calcularFaturamento(dailyMovements)), rawValue: calcularFaturamento(dailyMovements) },
+    { indicator: 'gastos', label: 'Gastos do dia', value: formatMoney(calcularGastos(dailyMovements)), rawValue: calcularGastos(dailyMovements) },
+    { indicator: 'investimentos', label: 'Investimentos do dia', value: formatMoney(calcularInvestimentos(dailyMovements)), rawValue: calcularInvestimentos(dailyMovements) },
+    { indicator: 'receita', label: 'Receita do dia', value: formatMoney(calcularReceitas(dailyMovements)), rawValue: calcularReceitas(dailyMovements) },
+    { indicator: 'accumulationIndex', label: 'Índice de acumulação do dia', value: accumulationIndex === null ? '—' : percentFormatter.format(accumulationIndex), rawValue: accumulationIndex },
   ] as const
 
   return (

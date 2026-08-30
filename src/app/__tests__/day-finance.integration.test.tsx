@@ -16,16 +16,25 @@ const html = renderToStaticMarkup(<DayScreen year={2026} month={8} day={14} move
 
 describe('integração da tela diária com o domínio financeiro', () => {
   it('exibe os totais bancários calculados para o dia', () => {
-    expect(html).toContain('Entradas bancárias do dia</dt><dd>R$ 1.150,00')
-    expect(html).toContain('Saídas bancárias do dia</dt><dd>R$ 500,00')
-    expect(html).toContain('Resultado bancário do dia</dt><dd>R$ 650,00')
+    expect(html).toContain('Entradas bancárias do dia</dt><dd class="financial-value--informational">R$ 1.150,00')
+    expect(html).toContain('Saídas bancárias do dia</dt><dd class="financial-value--informational">R$ 500,00')
+    expect(html).toContain('Resultado bancário do dia</dt><dd class="financial-value--positive">R$ 650,00')
   })
 
   it('exibe os indicadores financeiros calculados para o dia', () => {
-    expect(html).toContain('Faturamento do dia</dt><dd>R$ 1.000,00')
-    expect(html).toContain('Gastos do dia</dt><dd>R$ 300,00')
-    expect(html).toContain('Investimentos do dia</dt><dd>R$ 200,00')
-    expect(html).toContain('Índice de acumulação do dia</dt><dd>66,67%')
+    expect(html).toContain('Faturamento do dia</dt><dd class="financial-value--informational">R$ 1.000,00')
+    expect(html).toContain('Gastos do dia</dt><dd class="financial-value--informational">R$ 300,00')
+    expect(html).toContain('Lucro do dia</dt><dd class="financial-value--positive">R$ 700,00')
+    expect(html).toContain('Investimentos do dia</dt><dd class="financial-value--informational">R$ 200,00')
+    expect(html).toContain('Índice de acumulação do dia</dt><dd class="financial-value--informational">66,67%')
+  })
+
+  it('exibe lucro negativo normalmente', () => {
+    const negative = renderToStaticMarkup(<DayScreen year={2026} month={8} day={14} movements={[
+      ...movements,
+      { id: 'extra-expense', data: '2026-08-14', valorEmCentavos: 80_000, tipoBancario: 'saida', classificacaoFinanceira: 'gasto', dadosOriginais: {} },
+    ]} />)
+    expect(negative).toContain('Lucro do dia</dt><dd class="financial-value--negative">-R$ 100,00')
   })
 
   it('lista descrição, valor, tipo e classificação das movimentações do dia', () => {

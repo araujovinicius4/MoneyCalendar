@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { calcularEntradasBancarias, calcularGastos, calcularIndiceAcumulacao, calcularInvestimentos, calcularPercentualEfetivamenteGasto, calcularPercentualEfetivamenteInvestido, calcularSaidasBancarias } from '../../domain/finance'
+import { calcularEntradasBancarias, calcularGastos, calcularIndiceAcumulacao, calcularInvestimentos, calcularLucro, calcularPercentualEfetivamenteGasto, calcularPercentualEfetivamenteInvestido, calcularSaidasBancarias } from '../../domain/finance'
 import type { MovimentacaoFinanceira } from '../../domain/transactions'
 import { MonthScreen } from '../App'
 import { createMonthSummary } from '../month-summary'
@@ -69,12 +69,14 @@ describe('resumo financeiro mensal integrado', () => {
     expect(summary.bankingEntries).toBe(calcularEntradasBancarias(summary.movements))
     expect(summary.bankingExits).toBe(calcularSaidasBancarias(summary.movements))
     expect(summary.expenses).toBe(calcularGastos(summary.movements))
+    expect(summary.profit).toBe(calcularLucro(summary.movements))
     expect(summary.investments).toBe(calcularInvestimentos(summary.movements))
     expect(summary.percentualEfetivamenteGasto).toBe(calcularPercentualEfetivamenteGasto(summary.movements))
     expect(summary.percentualEfetivamenteInvestido).toBe(calcularPercentualEfetivamenteInvestido(summary.movements))
     expect(summary.accumulationIndex).toBe(calcularIndiceAcumulacao(summary.movements))
     const html = renderToStaticMarkup(<MonthScreen year={2026} month={7} movements={movements} today={today} investmentPercentage={0.8} />)
     expect(html).toContain('aria-label="Ver movimentações que compõem os gastos acumulados">R$ 100,00')
+    expect(html).toContain('Lucro acumulado</dt><dd class="financial-value--negative">-R$ 100,00')
     expect(html).toContain('Investimentos líquidos acumulados')
     expect(html).toContain('aria-label="Ver movimentações que compõem os investimentos líquidos acumulados">R$ 200,00')
     expect(html.match(/— do faturamento/g)).toHaveLength(2)

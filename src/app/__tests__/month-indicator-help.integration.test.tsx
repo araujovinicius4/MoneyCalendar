@@ -25,7 +25,7 @@ describe('ajuda contextual do resumo mensal', () => {
   afterEach(() => container.remove())
 
   it('centraliza conteúdo completo para todos os indicadores mensais', () => {
-    expect(Object.keys(MONTH_INDICATOR_HELP)).toHaveLength(16)
+    expect(Object.keys(MONTH_INDICATOR_HELP)).toHaveLength(17)
     for (const help of Object.values(MONTH_INDICATOR_HELP)) {
       expect(help.meaning).not.toBe('')
       expect(help.calculation).not.toBe('')
@@ -41,7 +41,7 @@ describe('ajuda contextual do resumo mensal', () => {
     await act(async () => root.render(<MonthScreen year={2026} month={8} movements={movements} today={today} investmentPercentage={0.8} />))
 
     const button = container.querySelector<HTMLButtonElement>('[aria-label="Ajuda sobre Orçamento operacional"]')
-    expect(container.querySelectorAll('.indicator-help__button')).toHaveLength(16)
+    expect(container.querySelectorAll('.indicator-help__button')).toHaveLength(17)
     expect(button).not.toBeNull()
     expect(button?.getAttribute('aria-expanded')).toBe('false')
     expect(container.textContent).not.toContain(MONTH_INDICATOR_HELP.operationalBudget.meaning)
