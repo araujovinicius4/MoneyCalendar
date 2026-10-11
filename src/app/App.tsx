@@ -399,6 +399,12 @@ export function DayScreen({ year, month, day, movements, today = new Date(), onR
   const accumulationIndex = calcularIndiceAcumulacao(dailyMovements)
   const previousDay = getAdjacentDay(year, month, day, -1)
   const nextDay = getAdjacentDay(year, month, day, 1)
+  const dayNavigationLinks = <>
+    {previousDay && <Link href={previousDay.href} aria-label="Dia anterior">← <span>Anterior</span></Link>}
+    <Link href={monthPath(year, month)} aria-label={`Voltar para ${MONTHS[month - 1]} de ${year}`}>Ver mês</Link>
+    <Link href={todayDayPath(today)} aria-label={`Hoje, abrir ${today.getDate()} de ${MONTHS[today.getMonth()]} de ${today.getFullYear()}`}>Hoje</Link>
+    {nextDay && <Link href={nextDay.href} aria-label="Próximo dia"><span>Próximo</span> →</Link>}
+  </>
   const bankingMetrics = [
     { indicator: 'bankingEntries', label: 'Entradas bancárias do dia', value: formatMoney(calcularEntradasBancarias(dailyMovements)), rawValue: calcularEntradasBancarias(dailyMovements) },
     { indicator: 'bankingExits', label: 'Saídas bancárias do dia', value: formatMoney(calcularSaidasBancarias(dailyMovements)), rawValue: calcularSaidasBancarias(dailyMovements) },
@@ -422,10 +428,7 @@ export function DayScreen({ year, month, day, movements, today = new Date(), onR
           <h1 className="day-title">{fullDate}</h1>
         </div>
         <nav className="period-navigation day-navigation" aria-label="Navegar entre dias">
-          {previousDay && <Link href={previousDay.href} aria-label="Dia anterior">← <span>Anterior</span></Link>}
-          <Link href={monthPath(year, month)} aria-label={`Voltar para ${MONTHS[month - 1]} de ${year}`}>Ver mês</Link>
-          <Link href={todayDayPath(today)} aria-label={`Hoje, abrir ${today.getDate()} de ${MONTHS[today.getMonth()]} de ${today.getFullYear()}`}>Hoje</Link>
-          {nextDay && <Link href={nextDay.href} aria-label="Próximo dia"><span>Próximo</span> →</Link>}
+          {dayNavigationLinks}
         </nav>
       </div>
 
@@ -492,6 +495,9 @@ export function DayScreen({ year, month, day, movements, today = new Date(), onR
             ))}
           </div>
         )}
+        <nav className="period-navigation day-navigation day-navigation--bottom" aria-label="Navegar entre dias após as movimentações">
+          {dayNavigationLinks}
+        </nav>
       </section>
     </section>
   )

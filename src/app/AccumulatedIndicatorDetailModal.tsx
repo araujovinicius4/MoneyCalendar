@@ -72,7 +72,7 @@ export function AccumulatedIndicatorDetailModal({ detail, onClose }: Accumulated
             <article className="indicator-detail-item" key={movement.id}>
               <time dateTime={movement.data}>{dateFormatter.format(new Date(`${movement.data}T12:00:00`))}</time>
               <div><strong>{getMovementDescription(movement)}</strong><span>{movement.tipoBancario === 'entrada' ? 'Entrada' : 'Saída'} · {classificationLabels[movement.classificacaoFinanceira]} · {isManualMovement(movement) ? 'Manual' : 'Importada'}</span></div>
-              <b>{moneyFormatter.format(movement.valorEmCentavos / 100)}</b>
+              <b className={detail.indicator === 'investimentos' && movement.tipoBancario === 'saida' ? 'transaction-value--saida' : undefined}>{moneyFormatter.format(movement.valorEmCentavos / 100)}</b>
             </article>
           ))}
         </div>

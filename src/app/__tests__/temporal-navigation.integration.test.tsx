@@ -1,3 +1,7 @@
+// @vitest-environment jsdom
+
+import { act } from 'react'
+import { createRoot } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { MovimentacaoFinanceira } from '../../domain/transactions'
@@ -55,6 +59,41 @@ describe('navegação temporal fim a fim', () => {
     expect(todayYearPath(today)).toBe('/calendario/2026')
     expect(todayMonthPath(today)).toBe('/calendario/2026/8')
     expect(todayDayPath(today)).toBe('/calendario/2026/8/15')
+  })
+
+  it.each([
+    { year: 2026, month: 8, day: 15, data: movements, previous: '/calendario/2026/8/14', next: '/calendario/2026/8/16' },
+    { year: 2026, month: 12, day: 31, data: [], previous: '/calendario/2026/12/30', next: '/calendario/2027/1/1' },
+    { year: 2027, month: 1, day: 1, data: [], previous: '/calendario/2026/12/31', next: '/calendario/2027/1/2' },
+    { year: 2024, month: 3, day: 1, data: [], previous: '/calendario/2024/2/29', next: '/calendario/2024/3/2' },
+  ])('mantém as duas navegações e os destinos após a atividade em $day/$month/$year', ({ year, month, day, data, previous, next }) => {
+    const container = document.createElement('div')
+    container.innerHTML = renderToStaticMarkup(<DayScreen year={year} month={month} day={day} movements={data} today={today} />)
+    const bottom = container.querySelector('.day-navigation--bottom')
+    expect(container.querySelectorAll('.day-navigation')).toHaveLength(2)
+    expect(bottom?.previousElementSibling?.className).toBe(data.length ? 'transaction-list' : 'transactions-empty')
+    const links = Array.from(bottom?.querySelectorAll('a') ?? [])
+    expect(links.map((link) => link.textContent)).toEqual(['← Anterior', 'Ver mês', 'Hoje', 'Próximo →'])
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([previous, `/calendario/${year}/${month}`, '/calendario/2026/8/15', next])
+    expect(bottom?.innerHTML).toBe(container.querySelector('.day-heading .day-navigation')?.innerHTML)
+  })
+
+  it('navega ao clicar em cada controle inferior mesmo sem movimentações', async () => {
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+    const container = document.createElement('div')
+    const root = createRoot(container)
+    const initialPath = window.location.pathname
+    try {
+      await act(async () => root.render(<DayScreen year={2026} month={12} day={31} movements={[]} today={today} />))
+      const links = container.querySelectorAll<HTMLAnchorElement>('.day-navigation--bottom a')
+      for (const [index, destination] of ['/calendario/2026/12/30', '/calendario/2026/12', '/calendario/2026/8/15', '/calendario/2027/1/1'].entries()) {
+        await act(async () => links[index].click())
+        expect(window.location.pathname).toBe(destination)
+      }
+    } finally {
+      await act(async () => root.unmount())
+      window.history.replaceState(null, '', initialPath)
+    }
   })
 
   it('mantém breadcrumbs coerentes e clicáveis conforme a profundidade', () => {

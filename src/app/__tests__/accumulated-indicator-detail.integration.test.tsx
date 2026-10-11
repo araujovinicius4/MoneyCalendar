@@ -72,7 +72,15 @@ describe('detalhamento dos indicadores acumulados', () => {
     expect(detailButton(container, 'investimentos')?.parentElement?.textContent).toContain('-7,00% do faturamento')
 
     await act(async () => detailButton(container, 'investimentos')?.click())
-    const dialogText = container.querySelector<HTMLElement>('[role="dialog"]')?.textContent
+    const dialog = container.querySelector<HTMLElement>('[role="dialog"]')
+    const dialogText = dialog?.textContent
+    const movementValues = dialog?.querySelectorAll('.indicator-detail-item > b')
+    expect(movementValues?.[0].className).toBe('transaction-value--saida')
+    expect(movementValues?.[0].textContent).toBe('R$ 50,00')
+    expect(movementValues?.[1].className).toBe('')
+    expect(movementValues?.[1].textContent).toBe('R$ 120,00')
+    expect(dialog?.querySelector('.indicator-detail-summary strong')?.className).toBe('')
+    expect(dialog?.querySelector('.indicator-detail-summary strong')?.textContent).toBe('-R$ 70,00')
     expect(dialogText).toContain('AplicaçõesR$ 50,00')
     expect(dialogText).toContain('ResgatesR$ 120,00')
     expect(dialogText).toContain('Investimentos líquidos = R$ 50,00 − R$ 120,00 = -R$ 70,00')
@@ -89,6 +97,7 @@ describe('detalhamento dos indicadores acumulados', () => {
 
     const expensesDialog = container.querySelector<HTMLElement>('[role="dialog"]')
     expect(expensesDialog?.textContent).toContain('gasto atual')
+    expect(expensesDialog?.querySelector('.indicator-detail-item > b')?.className).toBe('')
     expect(expensesDialog?.textContent).not.toContain('investimento atual')
     expect(expensesDialog?.textContent).not.toContain('gasto futuro')
     expect(expensesDialog?.textContent).not.toContain('gasto julho')

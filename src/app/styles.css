@@ -64,6 +64,7 @@ h1 span { color: #9ca39c; font-weight: 600; }
 .period-navigation { display: flex; align-items: center; gap: 7px; }
 .period-navigation a { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; background: var(--paper); font-size: 11px; font-weight: 700; text-decoration: none; }
 .period-navigation a:hover { color: var(--green); border-color: var(--green); }
+.day-navigation--bottom { margin-top: 17px; flex-wrap: wrap; justify-content: flex-end; }
 .annual-year--current { color: var(--green); }
 
 .annual-page { max-width: 1240px; padding-top: clamp(16px, 2.8vh, 32px); padding-bottom: clamp(16px, 2.8vh, 32px); }
@@ -417,6 +418,8 @@ h1 span { color: #9ca39c; font-weight: 600; }
   .day-navigation { width: 100%; gap: 4px; }
   .day-navigation a { flex: 1; min-height: 32px; padding: 0 6px; font-size: 9px; }
   .day-navigation a span { display: none; }
+  .day-navigation--bottom a { flex: 0 0 auto; }
+  .day-navigation--bottom a span { display: inline; }
   .day-summary { grid-template-columns: 1fr; gap: 9px; margin-bottom: 25px; }
   .summary-card { min-height: 152px; padding: 17px; }
   .metric-grid { margin-top: 19px; }
